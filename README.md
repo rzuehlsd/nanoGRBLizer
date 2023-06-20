@@ -19,6 +19,15 @@ There are some caveeats which have to be respected during assembly of the PCB du
 - Compile the grbl_uload.ino script from the grbl examples and download to your Nano
 ## Configuration of Controller
 Implement the grbl settings as described by Rogier in his readme. They worked for me! Changed the minimum amd maximum speed of your spindle and the dimensions of your mill if required. 
+## Initial Operation with UltimateCNC
+I used UltimateCNC on Linux as a gcode sender and after initial connection to the nanoGRBLizer a error alarm showed up, which confused me a lot. After a few hours of debugging and head scratching I found the solution in the config.h firle of the grbl library.
 
+// If homing is enabled, homing init lock sets Grbl into an alarm state upon power up. This forces
+// the user to perform the homing cycle (or override the locks) before doing anything else. This is
+// mainly a safety feature to remind the user to home, since position is unknown to Grbl.
+#define HOMING_INIT_LOCK // Comment to disable
 
-Nach einigen Anfangsproblemen konnte der Controller mit der Software UltimatCNC https://ultimatecnc-docs.softgon.net erfolgreich in Betrieb genommen werden.
+Commenting the macro above and recompiling immediatelly solved this issue, but during Homing annother error "Alarmcode 8 - Homing Fail" showed up. The machine could be moved manually in each direction, but homing failed each time. Finnaly I found an cause for this error. The Stepcraft has all 3 end switches connected in series which are signaled to the Nano on pin 9. So if the x or y axes is in an endposition the homing will fail, as even if the z axis is clear from the endswitch x or y axis report endpositions. Just moving all axes manually clear of endpositions prior to homing solved this problem.
+
+So if you try to use this controller I hope the information above will help you. Have fun!
+
