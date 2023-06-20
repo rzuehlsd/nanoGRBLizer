@@ -3,7 +3,7 @@ nanoGRBLizer is a GRBL 1.1 based Arduino Nano controller for Stepcraft SC420 D2 
 The design is based on the well known GRBLizer controller specifically designed for the Stepcraft mills by Rogier Lodewijks (see https://github.com/eflukx/Stepcraft-GRBLizer). 
 The nanoGRBLizer controller uses the open source GRBL1.1h software (https://github.com/gnea/grbl/wiki) and allows in combination with a GRBL code sender (eg. UltimateCNC or UGS) controll of all 3 axes and the spindle of the stepcraft mill. A probe length sens input is also available. 
 
-The functionality of the nanoGRBLizer compared to the original GRBLizer lacks the connections to controll a 4th axis and an aadditional relais. Dimensions and functionalty of the nanoGRBLizer allow for a 1:1 replacement of the WinPCNC USB controller of the Stepcraft mills, which is often used for hobby purposes.
+The functionality of the nanoGRBLizer compared to the original GRBLizer lacks the connections to controll a 4th axis and an additional relais. Dimensions and functionalty of the nanoGRBLizer PCB allow for a 1:1 replacement of the WinPCNC USB controller of the Stepcraft mills, which is often used for hobby purposes.
 
 I first tried to realize the original GRBLizer and ordered a PCB by PCBWay but realize that getting the required parts was problematic and costly. I therefore reduced the original design to the functionalities I really needed and had a specific focus on simplicity and cost. As a result I designed the nanoGRBLizer around a Arduino Nano bord which reduced the complexity a lot and was also very cost efficient. 
 
