@@ -5,7 +5,7 @@ The nanoGRBLizer controller uses the open source GRBL1.1h software (https://gith
 
 The functionality of the nanoGRBLizer compared to the original GRBLizer lacks the connections to controll a 4th axis and an additional relais. Dimensions and functionalty of the nanoGRBLizer PCB allow for a 1:1 replacement of the WinPCNC USB controller of the Stepcraft mills, which is often used for hobby purposes.
 
-![schematic](nanoGRBLizerjpg)
+![schematic](nanoGRBLizer.jpg)
 
 I first tried the original GRBLizer and ordered a PCB by PCBWay but realized that getting the required parts was problematic and costly. I therefore reduced the original design to the functionalities I really needed and had a specific focus on simplicity and cost. As a result I designed the nanoGRBLizer around a Arduino Nano bord which reduced the complexity a lot and was also very cost efficient. 
 
