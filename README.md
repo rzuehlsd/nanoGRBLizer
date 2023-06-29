@@ -3,26 +3,29 @@ nanoGRBLizer is a GRBL 1.1 based Arduino Nano controller for Stepcraft SC420 D2 
 The design is based on the well known GRBLizer controller specifically designed for the Stepcraft mills by Rogier Lodewijks (see https://github.com/eflukx/Stepcraft-GRBLizer). 
 The nanoGRBLizer controller uses the open source GRBL1.1h software (https://github.com/gnea/grbl/wiki) and allows in combination with a GRBL code sender (eg. UltimateCNC or UGS) controll of all 3 axes and the spindle of the stepcraft mill. A probe length sens input is also available. 
 
-The functionality of the nanoGRBLizer compared to the original GRBLizer lacks the connections to controll a 4th axis and an additional relais. Dimensions and functionalty of the nanoGRBLizer PCB allow for a 1:1 replacement of the WinPCNC USB controller of the Stepcraft mills, which is often used for hobby purposes.
+The functionality of the nanoGRBLizer compared to the original GRBLizer lacks the connections to controll a 4th axis and additional relais. Dimensions and functionalty of the nanoGRBLizer PCB allow for a 1:1 replacement of the WinPCNC USB controller of the Stepcraft mills, which is often used for hobby purposes.
 
 ![schematic](nanoGRBLizer.jpg)
 
 I first tried the original GRBLizer and ordered a PCB by PCBWay but realized that getting the required parts was problematic and costly. I therefore reduced the original design to the functionalities I really needed and had a specific focus on simplicity and cost. As a result I designed the nanoGRBLizer around a Arduino Nano bord which reduced the complexity a lot and was also very cost efficient. 
 
 This repository holds the KiCAD files to replicate the nanoGRBLizer and gives hints for implementation, configuration and initial operation of the nanoGRBLizer.
+
 ## PCB Assembly
 There are some caveeats which have to be respected during assembly of the PCB due to the space constraints of the Stepcraft mill.
-- First the 6 pin ISP header of the Arduino Nano has to be shorted by about 3mm. Alternatively you have to unsolder the header or isolate it, as the metal shield of the Stepcraft driver board might shorten the pins.
-- Directly solder the Arduino Nano on the PCB. Do not used a socket as the PCB might not fit into the available space and the USB socket might not be usable.
+- First the 6 pin ISP header of the Arduino Nano has to be shorted by about 3mm. Alternatively you have to unsolder the header or insolate it, as the metal shield of the Stepcraft driver board might shorten the pins.
+- Directly solder the Arduino Nano on the PCB. Do **not use a socket** as the PCB might not fit into the available space and the USB socket might not be usable.
+
 ## Installation of GRBL1.1 firmware
 - Download the current version of the GRBL 1.1 software from here: https://github.com/gnea/grbl
 - Install the grbl lib according to your Arduino IDE
-- Implement the changes to the files cpu_map.h and config.h as described by Rogier in https://github.com/eflukx/Stepcraft-GRBLizer
+- Implement the changes to the files cpu_map.h and config.h as described in the next section
 - Compile the grbl_uload.ino script from the grbl examples and download to your Nano
+
 ## Configuration of Controller
 I implemented the grbl settings as described by Rogier in his readme. They did not quite worked for me, but were a very good starting point. 
-AS I want to use the HF500 spindle with my sc420 mill I had to figure out how, get the spindle enable signal working.
-I changed the config.h, the cpu_map.h and the defaults.h file to reflect the changes needed by my configuration. To avoid chnaging configuration settings inside the default configuration for Atmega328 microprocessor I decided to  redefine required symbols inside a conditional block directly below the default settings. This redefinitions are garded by a `#ifdef NANO_GRBLIZER ... #endif`. The symbolNANO_GRBLIZER was then definded in config.h directly as shown below:
+As I wanted to use the HF500 spindle with my SC420 mill I had to figure out how to get the spindle enable signal on A3 working.
+I changed the config.h, the cpu_map.h and the defaults.h file to reflect the changes needed by my configuration. To avoid chnaging configuration settings inside the default configuration for Atmega328 microprocessor I decided to redefine required symbols inside a conditional block directly below the default settings. This redefinitions are guarded by a `#ifdef NANO_GRBLIZER ... #endif` bracket. The symbol NANO_GRBLIZER was then definded in config.h as shown below:
 ```
 // Define CPU pin map and default settings.
 // NOTE: OEMs can avoid the need to maintain/update the defaults.h and cpu_map.h files and use only
@@ -30,9 +33,9 @@ I changed the config.h, the cpu_map.h and the defaults.h file to reflect the cha
 // If doing so, simply comment out these two defines and see instructions below.
 #define DEFAULTS_GENERIC
 #define CPU_MAP_ATMEGA328P // Arduino Uno CPU
-#define NANO_GRBLIZER       // triggers redefinitions in config.h, cpu_map.h and defaults.h for nsnoGRBLizer
+#define NANO_GRBLIZER       // triggers redefinitions in config.h, cpu_map.h and defaults.h for nanoGRBLizer
 ```
-Now add the following code snippet to config.h at the end of the file:
+Now add the following code snippet to config.h at the **end of the file**:
 
 ```
 #ifdef NANO_GRBLIZER
@@ -63,12 +66,12 @@ Now add the following code snippet to config.h at the end of the file:
 #endif
 ```
 
-Now lets change the cpu_map.h file for nanGRBLizer. Past the following code directly below the CPU_MAP_ATMEGA328P file.
+Now lets change the cpu_map.h file for nanGRBLizer. Past the following code directly below the CPU_MAP_ATMEGA328P definitions into the file.
 
 ```
 #ifdef NANO_GRBLIZER
 
-// Paste cpu_map.h redefinitions for nanoGRBLIzer here.
+// Paste cpu_map.h redefinitions for nanoGRBLizer here.
 
 /* Additional or changed Grbl cpu mappings for nanoGRBLizer v01 with Arduini Nano
    Mill:      Stepcraft sc420 D2
@@ -100,7 +103,7 @@ Now lets change the cpu_map.h file for nanGRBLizer. Past the following code dire
 #endif //  NANO_GRBLIZER
 ```
 
-Now the changes to the default parameter definition. Past the following section directly below the `DEFAULTS_GENERIC` block.
+Add the changes to the default parameter definition. Past the following section directly below the `DEFAULTS_GENERIC` block.
 
 ```
 #ifdef NANO_GRBLIZER
@@ -138,8 +141,7 @@ Now the changes to the default parameter definition. Past the following section 
 ## Initial Operation with UltimateCNC
 I used UltimateCNC on Linux as a gcode sender and after initial connection to the nanoGRBLizer a error alarm showed up, which confused me a lot. After a few hours of debugging and head scratching I found the solution in the config.h file of the grbl library. I just disabled the HOMING_INIT_LOCK and could proceed. Homing and moving of all axes was fine, but I had a problem with the z-probing. I connected a simple probe at the probe connector of the nanGRBLizer and tried probing. I had to hit the stop switch as the bit did not stop at contact with my metal sheet. 
 
-Measurements showed that the voltage between both pins of the probe dropped from about 5V to OV but the probe event was not recognized. Testing outside the SC420 showed normal behaivior, eg. probe event was recognized without problems. So the problem has to be the combination of nanoGRBLizer and SC420. 
-After I connected the probe directly to the probe connector on the stepcraft mainboard everything worked as expected! Well now I understand the optional jumper to break the connection between A5 and SC_Length in the original GRBLizer schematic.
+Measurements showed that the voltage between both pins of the probe dropped from about 5V to OV but the probe event was not triggered. Testing outside the SC420 showed normal behaviour, eg. a probe event was recognized without problems. So the problem has to be the combination of nanoGRBLizer and SC420. After I connected the probe directly to the probe connector on the stepcraft mainboard everything worked as expected! Well now I understand the optional jumper to break the connection between A5 and SC_Length in the original GRBLizer schematic.
 
 There was just one additional change I had to make to the UltimateCNC default probe macro. The probe connected to the metal sheet and immediatldiatly raised an alarm. A closer look at the probe macro showed that after initial contact an additional G38.2 command was issued without raising the spindle.
 I changed that to `G38.2 Z-50 F50; G92 Z0; G0 Z10` as a first fix and all was fine.
