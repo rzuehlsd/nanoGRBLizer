@@ -22,25 +22,121 @@ There are some caveeats which have to be respected during assembly of the PCB du
 ## Configuration of Controller
 I implemented the grbl settings as described by Rogier in his readme. They did not quite worked for me, but were a very good starting point. 
 AS I want to use the HF500 spindle with my sc420 mill I had to figure out how, get the spindle enable signal working.
-I changed the config.h, the cpu_map.h and the defaults.h file to reflect the changes needed by my configuration. To avoid chnaging configuration settings inside the default configuration for Atmega328 microprocessor I decided to  redefine required symbols inside a conditional block directly below the default settings. This redefinitions are garded by a #ifdef NANO_GRBLIZER ... #endif. The symbolNANO_GRBLIZER was then definded in config.h directly as shown below:
-
->
+I changed the config.h, the cpu_map.h and the defaults.h file to reflect the changes needed by my configuration. To avoid chnaging configuration settings inside the default configuration for Atmega328 microprocessor I decided to  redefine required symbols inside a conditional block directly below the default settings. This redefinitions are garded by a `#ifdef NANO_GRBLIZER ... #endif`. The symbolNANO_GRBLIZER was then definded in config.h directly as shown below:
+```
+// Define CPU pin map and default settings.
+// NOTE: OEMs can avoid the need to maintain/update the defaults.h and cpu_map.h files and use only
+// one configuration file by placing their specific defaults and pin map at the bottom of this file.
+// If doing so, simply comment out these two defines and see instructions below.
 #define DEFAULTS_GENERIC
 #define CPU_MAP_ATMEGA328P // Arduino Uno CPU
 #define NANO_GRBLIZER       // triggers redefinitions in config.h, cpu_map.h and defaults.h for nsnoGRBLizer
-<
-Changed the minimum amd maximum speed of your spindle and the dimensions of your mill if required. 
+```
+Now add the following code snippet to config.h at the end of the file:
+
+```
+#ifdef NANO_GRBLIZER
+
+// Paste config redefinitions for nanoGRBLIzer  here:
+
+// do not raise alarm to force initial homing at startup
+#undef HOMING_INIT_LOCK // Comment to disable
+
+// Since all limit switches end up being shared on one pin, 
+// we can only home one direction at a time.
+#define HOMING_CYCLE_0 (1<<Z_AXIS)  // REQUIRED: First move Z to clear workspace.
+#define HOMING_CYCLE_1 (1<<Y_AXIS)  // OPTIONAL: Then move X,Y at the same time.
+#define HOMING_CYCLE_2 (1<<X_AXIS)  // OPTIONAL: Uncomment and add axes mask to enable
+
+// The stop output of the Stepcraft board is inverted to what GRBL expects.
+// However you simply can't swap the switch because the driver board will also
+// disable the motors so nothing will move.
+#define INVERT_CONTROL_PIN_MASK (1<<CONTROL_RESET_BIT) // Default disabled.
+
+// use safety door open event to stop mill and spindle with emergency stop switch
+#define ENABLE_SAFETY_DOOR_INPUT_PIN // Default disabled. Uncomment to enable.
+
+// Allows operation of Stepcraft HF500 spindle via grbl
+// Activates definition of spindle on/off signal
+#define USE_SPINDLE_DIR_AS_ENABLE_PIN
+
+#endif
+```
+
+Now lets change the cpu_map.h file for nanGRBLizer. Past the following code directly below the CPU_MAP_ATMEGA328P file.
+
+```
+#ifdef NANO_GRBLIZER
+
+// Paste cpu_map.h redefinitions for nanoGRBLIzer here.
+
+/* Additional or changed Grbl cpu mappings for nanoGRBLizer v01 with Arduini Nano
+   Mill:      Stepcraft sc420 D2
+   Spindle:   Stepcraft HF500
+*/
+
+
+// The Stepcraft has all limits on one pin.
+#define X_LIMIT_BIT    1  // Uno Digital Pin 9
+#define Y_LIMIT_BIT    1  // Uno Digital Pin 9
+#define Z_LIMIT_BIT    1  // Uno Digital Pin 9
+
+
+// redefinition of coolant enable port to save A3 for spindle
+#define COOLANT_FLOOD_BIT   6  // Uno Analog Pin 3
+
+// redefinition of safty door bit to be shared with CONTROL_RESET_BIT
+// hope this will shutsdown spindle and mill when triggered by E-Stop 
+#define CONTROL_SAFETY_DOOR_BIT   0
+
+// redefinition of spindle enable port 
+// needs definition of USE_SPINDLE_DIR_AS_ENABLE_PIN in config.h 
+// to allow for seperate spindle on/off signal via A3
+#define SPINDLE_ENABLE_DDR    DDRC
+#define SPINDLE_ENABLE_PORT   PORTC
+#define SPINDLE_ENABLE_BIT    3  // Uno Analog Pin 3
+
+
+#endif //  NANO_GRBLIZER
+```
+
+Now the changes to the default parameter definition. Past the following section directly below the `DEFAULTS_GENERIC` block.
+
+```
+#ifdef NANO_GRBLIZER
+
+  // Paste changes to generic default settings for nanoGRBLizer with sc420 and HF500 here.
+
+  #define DEFAULT_X_STEPS_PER_MM 133.333
+  #define DEFAULT_Y_STEPS_PER_MM 133.333
+  #define DEFAULT_Z_STEPS_PER_MM 133.333
+  #define DEFAULT_X_MAX_RATE 800.0 // mm/min
+  #define DEFAULT_Y_MAX_RATE 800.0 // mm/min
+  #define DEFAULT_Z_MAX_RATE 800.0 // mm/min
+  #define DEFAULT_X_MAX_TRAVEL 300.0 // mm NOTE: Must be a positive value.
+  #define DEFAULT_Y_MAX_TRAVEL 420.0 // mm NOTE: Must be a positive value.
+  #define DEFAULT_Z_MAX_TRAVEL 80.0 // mm NOTE: Must be a positive value.
+  #define DEFAULT_SPINDLE_RPM_MAX 20000.0 // rpm
+  #define DEFAULT_SPINDLE_RPM_MIN 3000.0 // rpm
+  #define DEFAULT_STEP_PULSE_MICROSECONDS 50
+  #define DEFAULT_STEPPER_IDLE_LOCK_TIME 100 // msec (0-254, 255 keeps steppers enabled)
+  #define DEFAULT_INVERT_ST_ENABLE 1 // false
+  #define DEFAULT_INVERT_LIMIT_PINS 1 // false
+  #define DEFAULT_SOFT_LIMIT_ENABLE 0 // false
+  #define DEFAULT_HARD_LIMIT_ENABLE 1  // false
+  #define DEFAULT_INVERT_PROBE_PIN 0 // false
+  #define DEFAULT_HOMING_ENABLE 1  // false
+  #define DEFAULT_HOMING_DIR_MASK 1 // move x to left to find limit switch
+  #define DEFAULT_HOMING_FEED_RATE 120.0 // mm/min
+  #define DEFAULT_HOMING_SEEK_RATE 900.0 // mm/min
+  #define DEFAULT_HOMING_DEBOUNCE_DELAY 250 // msec (0-65k)
+  #define DEFAULT_HOMING_PULLOFF 1.0 // mm
+
+#endif
+```
+
 ## Initial Operation with UltimateCNC
-I used UltimateCNC on Linux as a gcode sender and after initial connection to the nanoGRBLizer a error alarm showed up, which confused me a lot. After a few hours of debugging and head scratching I found the solution in the config.h file of the grbl library.
-
->/* If homing is enabled, homing init lock sets Grbl into an alarm state upon power up. This forces
- the user to perform the homing cycle (or override the locks) before doing anything else. This is
- mainly a safety feature to remind the user to home, since position is unknown to Grbl.
- */
->
->#define HOMING_INIT_LOCK // Comment to disable
-
-Commenting the macro above and recompiling immediatelly solved this issue, but during Homing annother error "Alarmcode 8 - Homing Fail" showed up. The machine could be moved manually in each direction, but homing failed each time. Finnaly I found an cause for this error. The Stepcraft has all 3 end switches connected in series which are signaled to the Nano on pin 9. So if the x or y axes is in an endposition the homing will fail, as even if the z axis is clear from the endswitch x or y axis report endpositions. Just moving all axes manually clear of endpositions prior to homing solved this problem.
-
+I used UltimateCNC on Linux as a gcode sender and after initial connection to the nanoGRBLizer a error alarm showed up, which confused me a lot. After a few hours of debugging and head scratching I found the solution in the config.h file of the grbl library. I just disabled the HOMING_INIT_LOCK and could procede. Homing and moving of all axes was fine, but I had a problem with the z-probing. I connected a simple probe at the probe connector of the nanGRBLizer and triedprobing. I had to hit the stop switch as the bit did not stop at contact with my metal sheet. Measurements showed that the voltage between both pins of the probe dropped from about 5V to OV but the probe event was not recognized. Testing outside the SC420 showed normal behaivior, eg. probe event was recognized without problems. So the problem has to be the combination of NANOGRBLizer and SC420. 
+After I connected the probe directly to the connector on the stepcraft mainboard everything worked as expected Well now I understand the Even though the 
 So if you try to use this controller I hope the information above will help you. Have fun!
 
