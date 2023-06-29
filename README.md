@@ -136,7 +136,13 @@ Now the changes to the default parameter definition. Past the following section 
 ```
 
 ## Initial Operation with UltimateCNC
-I used UltimateCNC on Linux as a gcode sender and after initial connection to the nanoGRBLizer a error alarm showed up, which confused me a lot. After a few hours of debugging and head scratching I found the solution in the config.h file of the grbl library. I just disabled the HOMING_INIT_LOCK and could procede. Homing and moving of all axes was fine, but I had a problem with the z-probing. I connected a simple probe at the probe connector of the nanGRBLizer and triedprobing. I had to hit the stop switch as the bit did not stop at contact with my metal sheet. Measurements showed that the voltage between both pins of the probe dropped from about 5V to OV but the probe event was not recognized. Testing outside the SC420 showed normal behaivior, eg. probe event was recognized without problems. So the problem has to be the combination of NANOGRBLizer and SC420. 
-After I connected the probe directly to the connector on the stepcraft mainboard everything worked as expected Well now I understand the Even though the 
+I used UltimateCNC on Linux as a gcode sender and after initial connection to the nanoGRBLizer a error alarm showed up, which confused me a lot. After a few hours of debugging and head scratching I found the solution in the config.h file of the grbl library. I just disabled the HOMING_INIT_LOCK and could proceed. Homing and moving of all axes was fine, but I had a problem with the z-probing. I connected a simple probe at the probe connector of the nanGRBLizer and tried probing. I had to hit the stop switch as the bit did not stop at contact with my metal sheet. 
+
+Measurements showed that the voltage between both pins of the probe dropped from about 5V to OV but the probe event was not recognized. Testing outside the SC420 showed normal behaivior, eg. probe event was recognized without problems. So the problem has to be the combination of nanoGRBLizer and SC420. 
+After I connected the probe directly to the probe connector on the stepcraft mainboard everything worked as expected! Well now I understand the optional jumper to break the connection between A5 and SC_Length in the original GRBLizer schematic.
+
+There was just one additional change I had to make to the UltimateCNC default probe macro. The probe connected to the metal sheet and immediatldiatly raised an alarm. A closer look at the probe macro showed that after initial contact an additional G38.2 command was issued without raising the spindle.
+I changed that to `G38.2 Z-50 F50; G92 Z0; G0 Z10` as a first fix and all was fine.
+
 So if you try to use this controller I hope the information above will help you. Have fun!
 
