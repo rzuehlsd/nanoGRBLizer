@@ -20,7 +20,16 @@ There are some caveeats which have to be respected during assembly of the PCB du
 - Implement the changes to the files cpu_map.h and config.h as described by Rogier in https://github.com/eflukx/Stepcraft-GRBLizer
 - Compile the grbl_uload.ino script from the grbl examples and download to your Nano
 ## Configuration of Controller
-Implement the grbl settings as described by Rogier in his readme. They worked for me! Changed the minimum amd maximum speed of your spindle and the dimensions of your mill if required. 
+I implemented the grbl settings as described by Rogier in his readme. They did not quite worked for me, but were a very good starting point. 
+AS I want to use the HF500 spindle with my sc420 mill I had to figure out how, get the spindle enable signal working.
+I changed the config.h, the cpu_map.h and the defaults.h file to reflect the changes needed by my configuration. To avoid chnaging configuration settings inside the default configuration for Atmega328 microprocessor I decided to  redefine required symbols inside a conditional block directly below the default settings. This redefinitions are garded by a #ifdef NANO_GRBLIZER ... #endif. The symbolNANO_GRBLIZER was then definded in config.h directly as shown below:
+
+>
+#define DEFAULTS_GENERIC
+#define CPU_MAP_ATMEGA328P // Arduino Uno CPU
+#define NANO_GRBLIZER       // triggers redefinitions in config.h, cpu_map.h and defaults.h for nsnoGRBLizer
+<
+Changed the minimum amd maximum speed of your spindle and the dimensions of your mill if required. 
 ## Initial Operation with UltimateCNC
 I used UltimateCNC on Linux as a gcode sender and after initial connection to the nanoGRBLizer a error alarm showed up, which confused me a lot. After a few hours of debugging and head scratching I found the solution in the config.h file of the grbl library.
 
