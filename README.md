@@ -110,9 +110,14 @@ Add the changes to the default parameter definition. Past the following section 
 
   // Paste changes to generic default settings for nanoGRBLizer with sc420 and HF500 here.
 
-  #define DEFAULT_X_STEPS_PER_MM 133.333
-  #define DEFAULT_Y_STEPS_PER_MM 133.333
-  #define DEFAULT_Z_STEPS_PER_MM 133.333
+  // My old version of Stepcraft sc420 has spindles with 2mm travel per revolution!
+  // At 400 half steps per revolution this leads to 200.000 half steps per millimeter
+  // whereas the newer versions have spindles with 3mm travel per revolution, hence
+  // 133.333 half steps per mm travel!
+
+  #define DEFAULT_X_STEPS_PER_MM 200.000		// standard will be 133.333
+  #define DEFAULT_Y_STEPS_PER_MM 200.000		// standard will be 133.333
+  #define DEFAULT_Z_STEPS_PER_MM 200.000		// standard will be 133.333
   #define DEFAULT_X_MAX_RATE 800.0 // mm/min
   #define DEFAULT_Y_MAX_RATE 800.0 // mm/min
   #define DEFAULT_Z_MAX_RATE 800.0 // mm/min
@@ -145,6 +150,8 @@ Measurements showed that the voltage between both pins of the probe dropped from
 
 There was just one additional change I had to make to the UltimateCNC default probe macro. The probe connected to the metal sheet and immediatldiatly raised an alarm. A closer look at the probe macro showed that after initial contact an additional G38.2 command was issued without raising the spindle.
 I changed that to `G38.2 Z-50 F50; G92 Z0; G0 Z10` as a first fix and all was fine.
+
+Further testing showed that all 3 axes did not travel the required distances. After some test and head scratching I figured out (sometimes its worth looking into the manual) that my early type of SC420 has spindles with 2mm travel distance per revolution and 200 steps per revolution stepper motors. As the Stepcraft drivers work in half step mode we have 400 half steps per revolution. After adjusting the (half) steps per mm travel to 200.000 for all axes ($100, $101 and $102) everything worked as expected.
 
 So if you try to use this controller I hope the information above will help you. Have fun!
 
