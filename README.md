@@ -143,7 +143,7 @@ Add the changes to the default parameter definition. Past the following section 
 #endif
 ```
 
-## Initial Operation with UltimateCNC
+## Initial Operation with UltimateCNC and nanoGRBLizer V1.0
 I used UltimateCNC on Linux as a gcode sender and after initial connection to the nanoGRBLizer a error alarm showed up, which confused me a lot. After a few hours of debugging and head scratching I found the solution in the config.h file of the grbl library. I just disabled the HOMING_INIT_LOCK and could proceed. Homing and moving of all axes was fine, but I had a problem with the z-probing. I connected a simple probe at the probe connector of the nanGRBLizer and tried probing. I had to hit the stop switch as the bit did not stop at contact with my metal sheet. 
 
 Measurements showed that the voltage between both pins of the probe dropped from about 5V to OV but the probe event was not triggered. Testing outside the SC420 showed normal behaviour, eg. a probe event was recognized without problems. So the problem has to be the combination of nanoGRBLizer and SC420. After I connected the probe directly to the probe connector on the stepcraft mainboard everything worked as expected! Well now I understand the optional jumper to break the connection between A5 and SC_Length in the original GRBLizer schematic.
@@ -154,4 +154,16 @@ I changed that to `G38.2 Z-50 F50; G92 Z0; G0 Z10` as a first fix and all was fi
 Further testing showed that all 3 axes did not travel the required distances. After some test and head scratching I figured out (sometimes its worth looking into the manual) that my early type of SC420 has spindles with 2mm travel distance per revolution and 200 steps per revolution stepper motors. As the Stepcraft drivers work in half step mode we have 400 half steps per revolution. After adjusting the (half) steps per mm travel to 200.000 for all axes ($100, $101 and $102) everything worked as expected.
 
 So if you try to use this controller I hope the information above will help you. Have fun!
+
+
+IMPORTANT NOTE  - Changes to nanoGRBLizer Rev 1.1
+
+When I tried to use AutoLevelling in UGS/UltimatCNC I discovered a very strange behavior. After initial x axis zero AutoLevellimng could bestartet but stopped at firs probe position with an error (incompatible initial state for probing). After some tests I found the reason to be the probe connected to the Stepcraft mainboard.
+After I interrupted the connection to  J1 pin 10 (Stepcraft probe sense connection) and connected the probe to J1 on the nanoGRBLizer controller everything worked as expected.
+
+These changes to the schematic and the board layout are reflected in the nanoGRBLizer Rev 1.1
+
+
+In Addition I included the files for grbl V1.1h with all SC 420 D2 related changes to the config.g, cpu_map.h and defaults.h files. So just compile and upload grblUpload.ino and you are done. All relevant settings for Stepcraft SC 420 D2 are included in the code.
+
 
