@@ -156,7 +156,7 @@ Further testing showed that all 3 axes did not travel the required distances. Af
 So if you try to use this controller I hope the information above will help you. Have fun!
 
 
-IMPORTANT NOTE  - Changes to nanoGRBLizer Rev 1.1
+## IMPORTANT NOTE  - Changes to nanoGRBLizer Rev 1.1
 
 When I tried to use AutoLevelling in UGS/UltimatCNC I discovered a very strange behavior. After initial x axis zero AutoLevellimng could bestartet but stopped at firs probe position with an error (incompatible initial state for probing). After some tests I found the reason to be the probe connected to the Stepcraft mainboard.
 After I interrupted the connection to  J1 pin 10 (Stepcraft probe sense connection) and connected the probe to J1 on the nanoGRBLizer controller everything worked as expected.
